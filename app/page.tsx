@@ -96,6 +96,13 @@ export default function Home() {
 		{ src: '/pics/Snapchat-973969055.jpg', alt: 'Our memory' },
 	];
 
+	// On mobile, prefer lighter (usually smaller) images such as Snapchat/Screenshot photos
+	const mobileFriendlyImages = sampleImages.filter(
+		(img) =>
+			img.src.includes("Snapchat") ||
+			img.src.includes("Screenshot")
+	);
+
 	// Opacity controls for different phases
 	const galleryOpacity = 1 - phase;
 	const secondSectionOpacity = clamp01(phase);
@@ -104,15 +111,17 @@ export default function Home() {
 	// Question + buttons fade in between phase 0.7 -> 1
 	const questionOpacity = clamp01((phase - 0.7) / 0.3);
 
-	// On mobile we use fewer photos to keep things lighter
+	// On mobile we use only the lighter images and fewer of them to keep things smooth
 	const galleryImages = isMobile
-		? sampleImages.slice(0, Math.min(sampleImages.length, 16))
+		? (mobileFriendlyImages.length > 0
+				? mobileFriendlyImages.slice(0, Math.min(mobileFriendlyImages.length, 10))
+				: sampleImages.slice(0, Math.min(sampleImages.length, 10)))
 		: sampleImages;
 
 	// For the floating Valentine section, show a curated subset so it doesn’t look overcrowded
 	const floatingImages = galleryImages.slice(
 		0,
-		Math.min(galleryImages.length, isMobile ? 10 : 18)
+		Math.min(galleryImages.length, isMobile ? 6 : 18)
 	);
 
 	// Pre-generate heart configs once so mobile doesn’t lag on each scroll/touch
