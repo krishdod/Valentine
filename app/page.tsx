@@ -36,28 +36,41 @@ export default function Home() {
 
 	const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
 		e.preventDefault();
-		// Use only the scroll direction and a very small fixed step
-		// so fast scrolling doesn't instantly jump to the next section.
+		// Use scroll delta for smoother, more responsive desktop scrolling
+		const step = Math.min(Math.abs(e.deltaY) * 0.0008, 0.08); // Cap max step for smoothness
 		const direction = Math.sign(e.deltaY);
-		const step = 0.025; // Even smoother transition
 		setPhase((prev) => clamp01(prev + direction * step));
 	};
 
-	// Handle touch events for mobile (use ref so value persists between renders)
+	// Handle touch events for mobile with improved sensitivity
 	const touchStartYRef = useRef(0);
+	const lastTouchTimeRef = useRef(0);
+	const velocityRef = useRef(0);
 
 	const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
 		const touch = e.touches[0];
 		touchStartYRef.current = touch.clientY;
+		lastTouchTimeRef.current = Date.now();
+		velocityRef.current = 0;
 	};
 
 	const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		const touch = e.touches[0];
+		const now = Date.now();
 		const deltaY = touchStartYRef.current - touch.clientY;
-		touchStartYRef.current = touch.clientY;
-		const delta = deltaY * 0.0005; // Even smoother for mobile
+		const deltaTime = Math.max(now - lastTouchTimeRef.current, 1);
+		
+		// Calculate velocity for momentum
+		velocityRef.current = deltaY / deltaTime;
+		
+		// Much more responsive: increased multiplier from 0.0005 to 0.003
+		// This makes mobile scrolling feel natural and not require excessive swiping
+		const delta = deltaY * 0.003;
 		setPhase((prev) => clamp01(prev + delta));
+		
+		touchStartYRef.current = touch.clientY;
+		lastTouchTimeRef.current = now;
 	};
 
 	// Your personal memories - all working images from the pics folder
