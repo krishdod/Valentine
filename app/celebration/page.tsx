@@ -7,6 +7,7 @@ import Link from "next/link";
 
 export default function CelebrationPage() {
 	const [isMounted, setIsMounted] = useState(false);
+	const [viewportWidth, setViewportWidth] = useState(1024);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
 	// BUBU & DUDU celebration images – use every image you added
@@ -24,12 +25,26 @@ export default function CelebrationPage() {
 
 	useEffect(() => {
 		setIsMounted(true);
+		setViewportWidth(typeof window !== "undefined" ? window.innerWidth : 1024);
+
+		const handleResize = () => {
+			setViewportWidth(window.innerWidth);
+		};
+
+		window.addEventListener("resize", handleResize);
+
 		// Auto-rotate images every 4 seconds
 		const interval = setInterval(() => {
 			setCurrentImageIndex((prev) => (prev + 1) % bubuDuduImages.length);
 		}, 4000);
-		return () => clearInterval(interval);
+
+		return () => {
+			clearInterval(interval);
+			window.removeEventListener("resize", handleResize);
+		};
 	}, [bubuDuduImages.length]);
+
+	const isMobile = viewportWidth < 768;
 
 	// Stagger animation for children
 	const containerVariants = {
@@ -81,10 +96,10 @@ export default function CelebrationPage() {
 				}} />
 			</div>
 
-			{/* Floating hearts - reduced count for performance */}
+			{/* Floating hearts - reduced count even more on mobile */}
 			{isMounted && (
 				<div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-					{[...Array(15)].map((_, i) => {
+					{[...Array(isMobile ? 8 : 15)].map((_, i) => {
 						const randomX = Math.random() * 100;
 						const randomDelay = Math.random() * 8;
 						const randomDuration = 12 + Math.random() * 8;

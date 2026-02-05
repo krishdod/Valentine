@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import type React from "react";
 import { useRouter } from "next/navigation";
 import InfiniteGallery from "@/components/ui/3d-gallery-photography";
@@ -105,7 +105,44 @@ export default function Home() {
 	const questionOpacity = clamp01((phase - 0.7) / 0.3);
 
 	// For the floating Valentine section, show a curated subset so it doesn’t look overcrowded
-	const floatingImages = sampleImages.slice(0, Math.min(sampleImages.length, 18));
+	const floatingImages = sampleImages.slice(
+		0,
+		Math.min(sampleImages.length, isMobile ? 12 : 18)
+	);
+
+	// Pre-generate heart configs once so mobile doesn’t lag on each scroll/touch
+	const heartCount = isMobile ? 12 : 24;
+	const fallingHeartsConfig = useMemo(
+		() =>
+			Array.from({ length: heartCount }).map(() => {
+				const randomX = Math.random() * 100;
+				const randomDelay = Math.random() * 5;
+				const randomDuration = 10 + Math.random() * 5;
+				const randomRotate = Math.random() * 360;
+				const colors = [
+					"#ff6b9d",
+					"#ffc0cb",
+					"#ff69b4",
+					"#ff1493",
+					"#ffb6c1",
+					"#ffffff",
+					"#ffd1dc",
+					"#e91e63",
+				];
+				const randomColor = colors[Math.floor(Math.random() * colors.length)];
+				const size = 0.4 + Math.random() * 0.6;
+
+				return {
+					randomX,
+					randomDelay,
+					randomDuration,
+					randomRotate,
+					randomColor,
+					size,
+				};
+			}),
+		[heartCount]
+	);
 
 	return (
 		<div
@@ -120,16 +157,18 @@ export default function Home() {
 			{/* Continuous Falling Hearts - Whole Page */}
 			{isMounted && (
 				<div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-					{[...Array(isMobile ? 20 : 30)].map((_, i) => {
-						const randomX = Math.random() * 100;
-						const randomDelay = Math.random() * 5;
-						const randomDuration = 10 + Math.random() * 5; // Slower, more graceful
-						const randomRotate = Math.random() * 360;
-						const colors = ['#ff6b9d', '#ffc0cb', '#ff69b4', '#ff1493', '#ffb6c1', '#ffffff', '#ffd1dc', '#e91e63'];
-						const randomColor = colors[Math.floor(Math.random() * colors.length)];
-						const size = 0.4 + Math.random() * 0.6;
-						
-						return (
+					{fallingHeartsConfig.map(
+						(
+							{
+								randomX,
+								randomDelay,
+								randomDuration,
+								randomRotate,
+								randomColor,
+								size,
+							},
+							i
+						) => (
 							<motion.div
 								key={`falling-heart-${i}`}
 								className="absolute"
@@ -151,20 +190,21 @@ export default function Home() {
 									delay: randomDelay,
 									ease: [0.25, 0.46, 0.45, 0.94],
 									repeat: Infinity,
-									repeatDelay: 0
+									repeatDelay: 0,
 								}}
 							>
-								<Heart 
+								<Heart
 									className="w-4 h-4 md:w-5 md:h-5"
-									style={{ 
+									style={{
 										fill: randomColor,
 										color: randomColor,
-										filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.4))'
+										filter:
+											"drop-shadow(0 0 6px rgba(255,255,255,0.4))",
 									}}
 								/>
 							</motion.div>
-						);
-					})}
+						)
+					)}
 				</div>
 			)}
 
