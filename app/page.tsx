@@ -104,10 +104,15 @@ export default function Home() {
 	// Question + buttons fade in between phase 0.7 -> 1
 	const questionOpacity = clamp01((phase - 0.7) / 0.3);
 
+	// On mobile we use fewer photos to keep things lighter
+	const galleryImages = isMobile
+		? sampleImages.slice(0, Math.min(sampleImages.length, 16))
+		: sampleImages;
+
 	// For the floating Valentine section, show a curated subset so it doesn’t look overcrowded
-	const floatingImages = sampleImages.slice(
+	const floatingImages = galleryImages.slice(
 		0,
-		Math.min(sampleImages.length, isMobile ? 12 : 18)
+		Math.min(galleryImages.length, isMobile ? 10 : 18)
 	);
 
 	// Pre-generate heart configs once so mobile doesn’t lag on each scroll/touch
@@ -154,8 +159,8 @@ export default function Home() {
 			{/* Romantic Ambient Background */}
 			<div className="fixed inset-0 romantic-ambient pointer-events-none z-0" />
 
-			{/* Continuous Falling Hearts - Whole Page */}
-			{isMounted && (
+			{/* Continuous Falling Hearts - disabled on mobile for performance */}
+			{isMounted && !isMobile && (
 				<div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
 					{fallingHeartsConfig.map(
 						(
@@ -216,7 +221,7 @@ export default function Home() {
 			>
 				<div className="absolute inset-0 bg-black/80 z-0" />
 				<InfiniteGallery
-					images={sampleImages}
+					images={galleryImages}
 					speed={1.2}
 					zSpacing={3}
 					visibleCount={12}
@@ -329,26 +334,30 @@ export default function Home() {
 				transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
 			>
 				<div className="relative flex w-full h-full items-center justify-center overflow-hidden">
-					{/* Floating images using your photos - NO parallax to prevent shaking */}
+					{/* Floating images using your photos */}
+					{/* On mobile we keep them static to avoid lag; on desktop they rotate */}
 					<div className="absolute inset-0 pointer-events-none">
-						{/* Slow rotating circle so the whole ring moves very smoothly */}
 						<motion.div
 							className="absolute inset-0"
 							style={{ transformOrigin: "50% 50%" }}
-							animate={{ rotate: 360 }}
-							transition={{
-								duration: 90,
-								repeat: Infinity,
-								ease: "linear",
-							}}
+							animate={isMobile ? undefined : { rotate: 360 }}
+							transition={
+								isMobile
+									? undefined
+									: {
+											duration: 90,
+											repeat: Infinity,
+											ease: "linear",
+									  }
+							}
 						>
 							{floatingImages.map((img, idx) => {
 								const total = floatingImages.length || 1;
 
 								// Distribute images evenly around a circle.
 								const angle = (idx / total) * Math.PI * 2;
-								const radiusY = isMobile ? 28 : 34; // vertical radius in %
-								const radiusX = isMobile ? 36 : 42; // horizontal radius in %
+								const radiusY = isMobile ? 26 : 34; // vertical radius in %
+								const radiusX = isMobile ? 34 : 42; // horizontal radius in %
 								const top = 50 + Math.sin(angle) * radiusY;
 								const left = 50 + Math.cos(angle) * radiusX;
 
@@ -357,24 +366,25 @@ export default function Home() {
 										key={idx}
 										className="absolute -translate-x-1/2 -translate-y-1/2"
 										initial={{ opacity: 0, scale: 0.7 }}
-										animate={{ 
+										animate={{
 											opacity: floatingOpacity,
-											scale: questionOpacity > 0.3 ? 1 : 0.85
+											scale: questionOpacity > 0.3 ? 1 : 0.85,
 										}}
-										transition={{ 
-											duration: 1.4,
-											delay: idx * 0.05,
-											ease: [0.16, 1, 0.3, 1]
+										transition={{
+											duration: 1.0,
+											delay: idx * 0.04,
+											ease: [0.16, 1, 0.3, 1],
 										}}
-										style={{ 
-											top: `${top}%`, 
+										style={{
+											top: `${top}%`,
 											left: `${left}%`,
 										}}
 									>
 										<div
 											className="w-12 h-16 xs:w-14 xs:h-18 sm:w-16 sm:h-22 md:w-20 md:h-28 rounded-lg sm:rounded-xl overflow-hidden border border-white/20 bg-black/40"
-											style={{ 
-												boxShadow: '0 8px 32px rgba(255,105,180,0.2), 0 4px 16px rgba(0,0,0,0.4)'
+											style={{
+												boxShadow:
+													"0 8px 32px rgba(255,105,180,0.2), 0 4px 16px rgba(0,0,0,0.4)",
 											}}
 										>
 											<img

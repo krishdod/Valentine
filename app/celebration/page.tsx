@@ -96,8 +96,8 @@ export default function CelebrationPage() {
 				}} />
 			</div>
 
-			{/* Floating hearts - reduced count even more on mobile */}
-			{isMounted && (
+			{/* Floating hearts - desktop only to keep mobile super smooth */}
+			{isMounted && !isMobile && (
 				<div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
 					{[...Array(isMobile ? 8 : 15)].map((_, i) => {
 						const randomX = Math.random() * 100;
